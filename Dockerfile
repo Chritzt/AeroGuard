@@ -25,4 +25,4 @@ USER appuser
 EXPOSE 3000
 
 # 9. Start Command
-CMD ["python", "src/main.py"]
+CMD ["python", "src/app.py"]
