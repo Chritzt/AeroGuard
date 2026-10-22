@@ -1,24 +1,51 @@
-# src/main.py
+# src/app.py
+import time
 from routes.api import AviationAPIClient
+from middleware.spoofingDetector import SpoofingDetector
 from middleware.squwakDetector import SquawkDetector
 
 def main():
-    print("[*] AeroGuard Engine running...")
+    print("[*] AeroGuard Engine starting continuous monitoring...")
     
     client = AviationAPIClient()
-    detector = SquawkDetector()
+    detector = SpoofingDetector()
+    squwak = SquawkDetector()
     
-    aircrafts = client.get_live_states()
-    print(f"[+] Fetched {len(aircrafts)} aircrafts.")
-    
-    alerts = detector.detect_unusual_codes(aircrafts)
-    
-    if alerts:
-        print(f"[!] ALERT: Found {len(alerts)} emergency squawking aircraft!")
-        for alert in alerts:
-            print(f"    -> ICAO: {alert['icao24']} | Callsign: {alert['callsign']} | Code: {alert['code']} ({alert['threat']})")
-    else:
-        print("[+] All clear. No emergency squawks detected.")
+    while True:
+        try:
+            print("\n--------------------------------------------------")
+            print("[*] Fetching live telemetry from OpenSky...")
+            aircrafts = client.get_live_states()
+            print(f"[+] Fetched {len(aircrafts)} aircrafts in Austrian airspace.")
+            
+            incidents = detector.check_for_anomalies(aircrafts)
+            
+            if incidents:
+                print(f"[!] SECURITY ALERT: Found {len(incidents)} suspicious aircraft!")
+                for inc in incidents:
+                    print(f"    -> ICAO: {inc['icao24']} | Callsign: {inc['callsign']} | Score: {inc['threat_score']}/100")
+                    for indicator in inc["indicators"]:
+                        print(f"       * {indicator}")
+            else:
+                print("[+] All clear. No anomalies detected.")
+
+            unusual_codes = squwak.detect_unusual_codes(aircrafts)
+
+            if unusual_codes : 
+                print("[!] EMERGENCY Codes detected: ")
+                for inc in unusual_codes:
+                    print(f"    -> ICAO: {inc['icao24']} | Callsign: {inc['callsign']} | Code: {inc['code']} | threat: {inc['threat']}/100")
+            else : 
+                print("[+] All clear. No Emergencies")
+                
+        except Exception as e:
+            print(f"[!] Error during telemetry cycle: {e}")
+            
+        print("[*] Waiting 10 seconds for next poll...")
+        time.sleep(10)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n[*] AeroGuard Engine gracefully stopped by user.")
