@@ -1,15 +1,24 @@
-#src/app.py
+# src/main.py
 from routes.api import AviationAPIClient
+from middleware.squwakDetector import SquawkDetector
 
 def main():
-    print("[*] AeroGuard Engine initializing...")
+    print("[*] AeroGuard Engine running...")
     
     client = AviationAPIClient()
+    detector = SquawkDetector()
     
-    raw_data = client.fetch_flight_data()
+    aircrafts = client.get_live_states()
+    print(f"[+] Fetched {len(aircrafts)} aircrafts.")
     
-    print(f"[+] Fetched {len(raw_data)} items from API.")
-    # TODO: Hier übergeben wir die Daten später an die Anomaly/Threat Engine
+    alerts = detector.detect_unusual_codes(aircrafts)
+    
+    if alerts:
+        print(f"[!] ALERT: Found {len(alerts)} emergency squawking aircraft!")
+        for alert in alerts:
+            print(f"    -> ICAO: {alert['icao24']} | Callsign: {alert['callsign']} | Code: {alert['code']} ({alert['threat']})")
+    else:
+        print("[+] All clear. No emergency squawks detected.")
 
 if __name__ == "__main__":
     main()
