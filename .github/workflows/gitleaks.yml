@@ -1,19 +1,26 @@
-# .github/workflows/gitleaks.yml
 name: gitleaks
+
 on:
   pull_request:
   push:
   workflow_dispatch:
   #schedule:
-    #- cron: "0 4 * * *" # run once a day at 4 AM
+    #- cron: "0 4 * * *"
+
 jobs:
   scan:
     name: gitleaks
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pull-requests: read
+
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          
       - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
