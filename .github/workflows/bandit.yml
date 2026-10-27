@@ -1,0 +1,32 @@
+# .github/workflows/bandit.yml
+name: Bandit Python SAST
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  sast:
+    name: Run Bandit Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Bandit
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit
+
+      - name: Run Bandit Security Scan
+        run: |
+          # -r scans the src-directory, -ll shows severity
+          bandit -r src/ -ll
