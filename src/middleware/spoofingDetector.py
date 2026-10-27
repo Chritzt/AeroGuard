@@ -64,7 +64,7 @@ class SpoofingDetector:
         velo_kmh = aircraft.velocity * 3.6
 
         if velo_kmh > 1225: 
-            return True, velo_kmh - 1225
+            return True, velo_kmh 
         if velo_kmh < 0:    
             return True, velo_kmh
 
